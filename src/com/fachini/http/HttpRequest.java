@@ -21,12 +21,44 @@ public class HttpRequest {
 	private String httpVersion;
 
 	public HttpRequest(InputStream inputStream) {
-		try {
-			boolean readMethod = false;
-			boolean readAllHeaders = false;
+		boolean readMethod = false;
+		boolean readAllHeaders = false;
 
-			StringBuilder sb = new StringBuilder();
-			List<String> lines = new ArrayList<>();
+		List<String> lines = getContentLines(inputStream);
+
+		for (String line : lines) {
+			if (!readMethod) {
+				String[] lineSplitted = line.split(" ");
+
+				setHttpMethod(HttpMethod.valueOf(lineSplitted[0]));
+				setPath(lineSplitted[1]);
+				checkQueryStringParameters(lineSplitted[1]);
+				setHttpVersion(lineSplitted[2]);
+				readMethod = true;
+				continue;
+			}
+
+			if (line.isBlank()) {
+				readAllHeaders = true;
+				continue;
+			}
+
+			if (!readAllHeaders) {
+				int colonIdx = line.indexOf(": ");
+				String key = line.substring(0, colonIdx);
+				String value = line.substring(colonIdx + 2);
+				addHeader(key, value);
+			} else {
+				body = line;
+			}
+		}
+	}
+
+	private List<String> getContentLines(InputStream inputStream) {
+		List<String> lines = new ArrayList<>();
+		StringBuilder sb = new StringBuilder();
+
+		try {
 			int byteRead = -2;
 			char charRead = 0;
 			boolean keepReading = true;
@@ -42,36 +74,12 @@ public class HttpRequest {
 			String[] contentSlitted = content.split("\n");
 
 			lines.addAll(Arrays.asList(contentSlitted));
-
-			for (String line : lines) {
-				if (!readMethod) {
-					String[] lineSplitted = line.split(" ");
-
-					setHttpMethod(HttpMethod.valueOf(lineSplitted[0]));
-					setPath(lineSplitted[1]);
-					checkQueryStringParameters(lineSplitted[1]);
-					setHttpVersion(lineSplitted[2]);
-					readMethod = true;
-					continue;
-				}
-
-				if (line.isBlank()) {
-					readAllHeaders = true;
-					continue;
-				}
-
-				if (!readAllHeaders) {
-					int colonIdx = line.indexOf(": ");
-					String key = line.substring(0, colonIdx);
-					String value = line.substring(colonIdx + 2);
-					addHeader(key, value);
-				} else {
-					body = line;
-				}
-			}
 		} catch (IOException e) {
-			Logger.log("Error reading request", e);
+			Logger.log("Error reading request input stream", e);
+			throw new RuntimeException(e);
 		}
+
+		return lines;
 	}
 
 	public void addHeader(String key, String value) {
@@ -117,6 +125,10 @@ public class HttpRequest {
 
 	public void setHttpVersion(String httpVersion) {
 		this.httpVersion = httpVersion;
+	}
+
+	public Map<String, String> getQueryStringParamters() {
+		return queryStringParamters;
 	}
 
 	private void checkQueryStringParameters(String path) {
