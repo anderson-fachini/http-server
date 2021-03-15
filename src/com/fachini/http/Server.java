@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.fachini.http.responsehandlers.HttpResponseFactory;
+
 public class Server {
 
 	private static int PORT = 0;
@@ -57,8 +59,8 @@ public class Server {
 		HttpRequest httpRequest = new HttpRequest(client.getInputStream());
 		Logger.log(httpRequest);
 
-		HttpResponse response = handleRequest(httpRequest);
-		// response.setContent("isso é um teste");
+		HttpResponse response = HttpResponseFactory.getResponseFor(httpRequest);
+		response.handle();
 
 		OutputStream clientOutput = client.getOutputStream();
 		clientOutput.write(response.getData());
@@ -66,10 +68,4 @@ public class Server {
 		client.close();
 	}
 
-	private static HttpResponse handleRequest(HttpRequest request) {
-		HttpResponse response = new HttpResponse();
-		response.dealWithFile(request.getPath());
-
-		return response;
-	}
 }

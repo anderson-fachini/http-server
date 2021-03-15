@@ -1,19 +1,18 @@
 package com.fachini.http;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HttpResponse {
+public abstract class HttpResponse {
+
+	private HttpRequest request;
 
 	private Map<String, String> headers = new HashMap<>();
 
 	private HttpStatus httpStatus = HttpStatus.OK;
 
-	public HttpResponse() {
+	public HttpResponse(HttpRequest request) {
+		this.request = request;
 		headers.put("server", "Fachini HTTP Server");
 	}
 
@@ -39,38 +38,19 @@ public class HttpResponse {
 		this.content = content;
 	}
 
-	public void dealWithFile(String path) {
-		Path filePath = getFilePath(path);
-
-		if (!Files.exists(filePath)) {
-			httpStatus = HttpStatus.NOT_FOUND;
-			setContent("File not found");
-		} else {
-			try {
-				content = Files.readAllBytes(filePath);
-				headers.put("content-type", guessContentType(filePath));
-				headers.put("content-length", Integer.toString(content.length));
-			} catch (IOException e) {
-				Logger.log("Error dealing with file " + path, e);
-
-				httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-				setContent("Internal server error");
-			}
-
-		}
+	public HttpRequest getRequest() {
+		return request;
 	}
 
-	private String guessContentType(Path filePath) throws IOException {
-		return Files.probeContentType(filePath);
+	public HttpStatus getHttpStatus() {
+		return httpStatus;
 	}
 
-	private Path getFilePath(String path) {
-		if ("/".equals(path)) {
-			path = "/index.html";
-		}
-
-		return Paths.get(Server.SITE_PATH, path);
+	public void setHttpStatus(HttpStatus httpStatus) {
+		this.httpStatus = httpStatus;
 	}
+
+	public abstract void handle();
 
 	public byte[] getData() {
 		StringBuilder sb = new StringBuilder();
