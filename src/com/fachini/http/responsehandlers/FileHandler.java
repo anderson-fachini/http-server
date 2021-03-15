@@ -20,86 +20,85 @@ import com.fachini.http.utils.DateTimeUtils;
 
 public class FileHandler extends HttpResponse {
 
-	@Override
-	public void handle(HttpRequest request) {
-		String path = request.getPath();
-		Path filePath = getFilePath(path);
+    @Override
+    public void handle(HttpRequest request) {
+        String path = request.getPath();
+        Path filePath = getFilePath(path);
 
-		if (!Files.exists(filePath)) {
-			setHttpStatus(HttpStatus.NOT_FOUND);
-			setContent("File not found");
-		} else {
-			byte[] content = new byte[0];
-			try {
-				content = Files.readAllBytes(filePath);
-				addHeader("Content-Type", guessContentType(filePath));
-				addHeader("Content-Length", Integer.toString(content.length));
+        if (!Files.exists(filePath)) {
+            setHttpStatus(HttpStatus.NOT_FOUND);
+            setContent("File not found");
+        } else {
+            byte[] content = new byte[0];
+            try {
+                content = Files.readAllBytes(filePath);
+                addHeader("Content-Type", guessContentType(filePath));
+                addHeader("Content-Length", Integer.toString(content.length));
 
-				LocalDateTime lastModifiedDate = getLastModified(filePath);
-				if (lastModifiedDate != null) {
-					addHeader("Last-Modified", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(lastModifiedDate));
-				}
+                LocalDateTime lastModifiedDate = getLastModified(filePath);
+                if (lastModifiedDate != null) {
+                    addHeader("Last-Modified", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(lastModifiedDate));
+                }
 
-				boolean ifModifiedHeaderSet = setIfModifiedHeader(request, lastModifiedDate);
+                boolean ifModifiedHeaderSet = setIfModifiedHeader(request, lastModifiedDate);
 
-				if (!ifModifiedHeaderSet
-						&& List.of(HttpMethod.GET, HttpMethod.POST).contains(request.getHttpMethod())) {
-					setContent(content);
-				}
-			} catch (IOException e) {
-				Logger.log("Error dealing with file " + path, e);
+                if (!ifModifiedHeaderSet
+                        && List.of(HttpMethod.GET, HttpMethod.POST).contains(request.getHttpMethod())) {
+                    setContent(content);
+                }
+            } catch (IOException e) {
+                Logger.log("Error dealing with file " + path, e);
 
-				setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-				setContent("Internal server error");
-			}
-		}
-	}
+                setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+                setContent("Internal server error");
+            }
+        }
+    }
 
-	private boolean setIfModifiedHeader(HttpRequest request, LocalDateTime lastModifiedDate) {
-		String modifyCheckHeader = request.getHeader("If-Modified-Since");
-		if (modifyCheckHeader == null) {
-			modifyCheckHeader = request.getHeader("If-Unmodified-Since");
-		}
+    private boolean setIfModifiedHeader(HttpRequest request, LocalDateTime lastModifiedDate) {
+        String modifyCheckHeader = request.getHeader("If-Modified-Since");
+        if (modifyCheckHeader == null) {
+            modifyCheckHeader = request.getHeader("If-Unmodified-Since");
+        }
 
-		if (modifyCheckHeader != null && !modifyCheckHeader.isBlank()) {
-			LocalDateTime modifyCheckDateTime = LocalDateTime.parse(modifyCheckHeader,
-					DateTimeUtils.HTTP_DATE_TIME_FORMATTER);
-			if (lastModifiedDate != null && (lastModifiedDate.isBefore(modifyCheckDateTime)
-					|| lastModifiedDate.isEqual(modifyCheckDateTime))) {
-				setHttpStatus(HttpStatus.NOT_MODIFIED);
-				return true;
-			}
-		}
+        if (modifyCheckHeader != null && !modifyCheckHeader.isBlank()) {
+            LocalDateTime modifyCheckDateTime = LocalDateTime.parse(modifyCheckHeader,
+                    DateTimeUtils.HTTP_DATE_TIME_FORMATTER);
+            if (lastModifiedDate != null && (lastModifiedDate.isBefore(modifyCheckDateTime)
+                    || lastModifiedDate.isEqual(modifyCheckDateTime))) {
+                setHttpStatus(HttpStatus.NOT_MODIFIED);
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	private LocalDateTime getLastModified(Path path) {
-		try {
-			BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-			FileTime lastModifiedTime = attr.lastModifiedTime();
+    private LocalDateTime getLastModified(Path path) {
+        try {
+            BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+            FileTime lastModifiedTime = attr.lastModifiedTime();
 
-			LocalDateTime lastModified = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneOffset.UTC);
-			// remove the nanos to improve comparison, as the browser sends the time up to
-			// the seconds
-			lastModified = lastModified.minusNanos(lastModified.getNano());
-			return lastModified;
-		} catch (IOException e) {
-			Logger.log("Error checking modified date of file " + path, e);
-			return null;
-		}
-	}
+            LocalDateTime lastModified = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneOffset.UTC);
+            // remove the nanos to improve comparison, as the browser sends the time up to the seconds
+            lastModified = lastModified.minusNanos(lastModified.getNano());
+            return lastModified;
+        } catch (IOException e) {
+            Logger.log("Error checking modified date of file " + path, e);
+            return null;
+        }
+    }
 
-	private String guessContentType(Path filePath) throws IOException {
-		return Files.probeContentType(filePath);
-	}
+    private String guessContentType(Path filePath) throws IOException {
+        return Files.probeContentType(filePath);
+    }
 
-	private Path getFilePath(String path) {
-		if ("/".equals(path)) {
-			path = "/index.html";
-		}
+    private Path getFilePath(String path) {
+        if ("/".equals(path)) {
+            path = "/index.html";
+        }
 
-		return Paths.get(ConfigurationManager.SITE_PATH, path);
-	}
+        return Paths.get(ConfigurationManager.SITE_PATH, path);
+    }
 
 }

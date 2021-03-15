@@ -9,25 +9,25 @@ import com.fachini.http.HttpResponse;
 
 public class HttpResponseFactory {
 
-	private static final Map<String, HttpResponse> PATH_HANDLERS = new HashMap<>();
+    private static final Map<String, HttpResponse> PATH_HANDLERS = new HashMap<>();
 
-	private HttpResponseFactory() {
-	}
+    private HttpResponseFactory() {
+    }
 
-	public static void registerHandlerForPath(String path, HttpResponse handler) {
-		PATH_HANDLERS.put(path, handler);
-	}
+    public static void registerHandlerForPath(String path, HttpResponse handler) {
+        PATH_HANDLERS.put(path, handler);
+    }
 
-	public static HttpResponse getResponseFor(HttpRequest request) {
-		HttpResponse pathHandler = PATH_HANDLERS.get(request.getPath());
-		if (pathHandler != null) {
-			return pathHandler;
-		}
+    public static HttpResponse getResponseFor(HttpRequest request) {
+        HttpResponse pathHandler = PATH_HANDLERS.get(request.getPath());
+        if (pathHandler != null) {
+            return pathHandler;
+        }
 
-		if (request.getHttpMethod() == HttpMethod.OPTIONS) {
-			return new HttpOptionsHandler();
-		}
+        if (request.getHttpMethod() == HttpMethod.OPTIONS) {
+            return new HttpOptionsHandler();
+        }
 
-		return new FileHandler();
-	}
+        return new FileHandler();
+    }
 }

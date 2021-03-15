@@ -5,16 +5,16 @@ import com.fachini.http.HttpResponse;
 
 public class SayHelloHandler extends HttpResponse {
 
-	@Override
-	public void handle(HttpRequest request) {
-		String name = request.getQueryStringParameter("name");
-		if (name == null || name.isBlank()) {
-			name = "Anonymous";
-		}
+    @Override
+    public void handle(HttpRequest request) {
+        String name = request.getQueryStringParameter("name");
+        if (name == null || name.isBlank()) {
+            name = "Anonymous";
+        }
 
-		String content = "Hello " + name;
-		setContent(content);
-		addHeader("Content-Type", "text/plain");
-	}
+        String content = "Hello " + name;
+        setContent(content);
+        addHeader("Content-Type", "text/plain");
+    }
 
 }

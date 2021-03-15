@@ -9,72 +9,72 @@ import com.fachini.http.utils.DateTimeUtils;
 
 public abstract class HttpResponse {
 
-	private Map<String, String> headers = new HashMap<>();
+    private Map<String, String> headers = new HashMap<>();
 
-	private HttpStatus httpStatus = HttpStatus.OK;
+    private HttpStatus httpStatus = HttpStatus.OK;
 
-	private byte[] content = null;
+    private byte[] content = null;
 
-	public void addHeader(String key, String value) {
-		headers.put(key, value);
-	}
+    public void addHeader(String key, String value) {
+        headers.put(key, value);
+    }
 
-	public Map<String, String> getHeaders() {
-		return headers;
-	}
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
 
-	public byte[] getContent() {
-		return content;
-	}
+    public byte[] getContent() {
+        return content;
+    }
 
-	public void setContent(String content) {
-		this.content = content.getBytes();
-	}
+    public void setContent(String content) {
+        this.content = content.getBytes();
+    }
 
-	public void setContent(byte[] content) {
-		this.content = content;
-	}
+    public void setContent(byte[] content) {
+        this.content = content;
+    }
 
-	public HttpStatus getHttpStatus() {
-		return httpStatus;
-	}
+    public HttpStatus getHttpStatus() {
+        return httpStatus;
+    }
 
-	public void setHttpStatus(HttpStatus httpStatus) {
-		this.httpStatus = httpStatus;
-	}
+    public void setHttpStatus(HttpStatus httpStatus) {
+        this.httpStatus = httpStatus;
+    }
 
-	public abstract void handle(HttpRequest request);
+    public abstract void handle(HttpRequest request);
 
-	public byte[] getData() {
-		headers.put("Server", "Fachini HTTP Server");
-		headers.put("Date", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(LocalDateTime.now(ZoneOffset.UTC)));
-		headers.put("Connection", "close");
+    public byte[] getData() {
+        headers.put("Server", "Fachini HTTP Server");
+        headers.put("Date", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(LocalDateTime.now(ZoneOffset.UTC)));
+        headers.put("Connection", "close");
 
-		StringBuilder sb = new StringBuilder();
-		sb.append("HTTP/1.1 ").append(httpStatus.getFormatted()).append(System.lineSeparator());
+        StringBuilder sb = new StringBuilder();
+        sb.append("HTTP/1.1 ").append(httpStatus.getFormatted()).append(System.lineSeparator());
 
-		for (Map.Entry<String, String> entry : headers.entrySet()) {
-			sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(System.lineSeparator());
-		}
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(System.lineSeparator());
+        }
 
-		byte[] bytes = sb.toString().getBytes();
+        byte[] bytes = sb.toString().getBytes();
 
-		if (content != null && content.length > 0) {
-			bytes = concatenate(bytes, System.lineSeparator().getBytes());
-			bytes = concatenate(bytes, content);
-		}
+        if (content != null && content.length > 0) {
+            bytes = concatenate(bytes, System.lineSeparator().getBytes());
+            bytes = concatenate(bytes, content);
+        }
 
-		return bytes;
-	}
+        return bytes;
+    }
 
-	private byte[] concatenate(byte[] a, byte[] b) {
-		int aLen = a.length;
-		int bLen = b.length;
+    private byte[] concatenate(byte[] a, byte[] b) {
+        int aLen = a.length;
+        int bLen = b.length;
 
-		byte[] c = new byte[aLen + bLen];
-		System.arraycopy(a, 0, c, 0, aLen);
-		System.arraycopy(b, 0, c, aLen, bLen);
+        byte[] c = new byte[aLen + bLen];
+        System.arraycopy(a, 0, c, 0, aLen);
+        System.arraycopy(b, 0, c, aLen, bLen);
 
-		return c;
-	}
+        return c;
+    }
 }
