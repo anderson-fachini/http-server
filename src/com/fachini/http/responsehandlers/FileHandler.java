@@ -85,6 +85,7 @@ public class FileHandler extends HttpResponse {
 			FileTime lastModifiedTime = attr.lastModifiedTime();
 
 			LocalDateTime lastModified = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneOffset.UTC);
+			// remove the nanos to improve comparison, as the browser sends the time up to the seconds
 			lastModified = lastModified.minusNanos(lastModified.getNano());
 			return lastModified;
 		} catch (IOException e) {
