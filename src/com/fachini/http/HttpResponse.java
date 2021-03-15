@@ -1,7 +1,11 @@
 package com.fachini.http;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fachini.http.utils.DateTimeUtils;
 
 public abstract class HttpResponse {
 
@@ -13,7 +17,9 @@ public abstract class HttpResponse {
 
 	public HttpResponse(HttpRequest request) {
 		this.request = request;
-		headers.put("server", "Fachini HTTP Server");
+		headers.put("Server", "Fachini HTTP Server");
+		headers.put("Date", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(LocalDateTime.now(ZoneOffset.UTC)));
+		headers.put("Connection", "close");
 	}
 
 	private byte[] content = null;

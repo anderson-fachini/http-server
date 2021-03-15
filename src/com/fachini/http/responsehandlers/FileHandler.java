@@ -8,7 +8,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.fachini.http.HttpMethod;
@@ -17,10 +16,9 @@ import com.fachini.http.HttpResponse;
 import com.fachini.http.HttpStatus;
 import com.fachini.http.Logger;
 import com.fachini.http.Server;
+import com.fachini.http.utils.DateTimeUtils;
 
 public class FileHandler extends HttpResponse {
-
-	private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("EEE, d MMM yyyy kk:mm:ss 'GMT'");
 
 	public FileHandler(HttpRequest request) {
 		super(request);
@@ -43,7 +41,7 @@ public class FileHandler extends HttpResponse {
 
 				LocalDateTime lastModifiedDate = getLastModified(filePath);
 				if (lastModifiedDate != null) {
-					addHeader("Last-Modified", DTF.format(lastModifiedDate));
+					addHeader("Last-Modified", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(lastModifiedDate));
 				}
 
 				boolean ifModifiedHeaderSet = setIfModifiedHeader(lastModifiedDate);
@@ -68,7 +66,8 @@ public class FileHandler extends HttpResponse {
 		}
 
 		if (modifyCheckHeader != null && !modifyCheckHeader.isBlank()) {
-			LocalDateTime modifyCheckDateTime = LocalDateTime.parse(modifyCheckHeader, DTF);
+			LocalDateTime modifyCheckDateTime = LocalDateTime.parse(modifyCheckHeader,
+					DateTimeUtils.HTTP_DATE_TIME_FORMATTER);
 			if (lastModifiedDate != null && (lastModifiedDate.isBefore(modifyCheckDateTime)
 					|| lastModifiedDate.isEqual(modifyCheckDateTime))) {
 				setHttpStatus(HttpStatus.NOT_MODIFIED);
@@ -85,7 +84,8 @@ public class FileHandler extends HttpResponse {
 			FileTime lastModifiedTime = attr.lastModifiedTime();
 
 			LocalDateTime lastModified = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneOffset.UTC);
-			// remove the nanos to improve comparison, as the browser sends the time up to the seconds
+			// remove the nanos to improve comparison, as the browser sends the time up to
+			// the seconds
 			lastModified = lastModified.minusNanos(lastModified.getNano());
 			return lastModified;
 		} catch (IOException e) {
