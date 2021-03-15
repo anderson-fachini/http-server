@@ -4,12 +4,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class HttpRequest {
 
 	private Map<String, String> headers = new LinkedHashMap<>();
+	private Map<String, String> queryStringParamters = new LinkedHashMap<>();
 	private HttpMethod httpMethod;
 	private String path;
 	private String body = "";
@@ -29,6 +33,7 @@ public class HttpRequest {
 
 					setHttpMethod(HttpMethod.valueOf(lineSplitted[0]));
 					setPath(lineSplitted[1]);
+					checkQueryStringParameters(lineSplitted[1]);
 					setHttpVersion(lineSplitted[2]);
 					readMethod = true;
 					continue;
@@ -83,6 +88,10 @@ public class HttpRequest {
 	}
 
 	public void setPath(String path) {
+		int questionMarkIdx = path.indexOf("?");
+		if (questionMarkIdx != -1) {
+			path = path.substring(0, questionMarkIdx);
+		}
 		this.path = path;
 	}
 
@@ -94,17 +103,41 @@ public class HttpRequest {
 		this.httpVersion = httpVersion;
 	}
 
+	private void checkQueryStringParameters(String path) {
+		try {
+			path = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
+		} catch (UnsupportedEncodingException e) {
+			Logger.log("Error decoding path '" + path + "'", e);
+		}
+
+		int questionMarkIdx = path.indexOf("?");
+		if (questionMarkIdx != -1) {
+			String queryString = path.substring(questionMarkIdx + 1);
+			String[] parameters = queryString.split("&");
+
+			for (String parameter : parameters) {
+				String[] parameterSplitted = parameter.split("=");
+				String key = parameterSplitted[0];
+				String value = parameterSplitted[1];
+				queryStringParamters.put(key, value);
+			}
+		}
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(httpMethod).append(" ").append(path).append(" ").append(httpVersion).append(System.lineSeparator());
+
+		if (!queryStringParamters.isEmpty()) {
+			sb.append("Query string parameters: ").append(queryStringParamters).append(System.lineSeparator());
+		}
 
 		for (Map.Entry<String, String> entry : headers.entrySet()) {
 			sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(System.lineSeparator());
 		}
 
 		if (!body.isBlank()) {
-			sb.append("content-length").append(": ").append(body.length());
 			sb.append(System.lineSeparator()).append(body);
 		}
 
