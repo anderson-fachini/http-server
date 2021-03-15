@@ -30,6 +30,7 @@ public class HttpRequest {
 			if (!readMethod) {
 				String[] lineSplitted = line.split(" ");
 
+				Logger.log("Checking HTTP method " + lineSplitted[0]);
 				setHttpMethod(HttpMethod.valueOf(lineSplitted[0]));
 				setPath(lineSplitted[1]);
 				checkQueryStringParameters(lineSplitted[1]);
@@ -59,14 +60,18 @@ public class HttpRequest {
 		StringBuilder sb = new StringBuilder();
 
 		try {
-			int byteRead = -2;
-			char charRead = 0;
-			boolean keepReading = true;
+			int bytesRead = 0;
+			int bufferSize = 1024;
+			byte[] buffer = new byte[bufferSize];
 
-			while (keepReading && (byteRead = inputStream.read()) != -1) {
-				charRead = (char) byteRead;
-				sb.append(charRead);
-				keepReading = inputStream.available() > 0;
+			while ((bytesRead = inputStream.read(buffer)) > 0) {
+				sb.append(new String(buffer));
+
+				if (bytesRead < bufferSize) {
+					break;
+				}
+
+				buffer = new byte[bufferSize];
 			}
 
 			String content = sb.toString();
