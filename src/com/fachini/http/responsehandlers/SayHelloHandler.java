@@ -14,6 +14,7 @@ public class SayHelloHandler extends HttpResponse {
 
 		String content = "Hello " + name;
 		setContent(content);
+		addHeader("Content-Type", "text/plain");
 	}
 
 }

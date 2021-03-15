@@ -51,7 +51,7 @@ public abstract class HttpResponse {
 		headers.put("Connection", "close");
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("HTTP/1.1 ").append(httpStatus.getCode()).append(System.lineSeparator());
+		sb.append("HTTP/1.1 ").append(httpStatus.getFormatted()).append(System.lineSeparator());
 
 		for (Map.Entry<String, String> entry : headers.entrySet()) {
 			sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(System.lineSeparator());
