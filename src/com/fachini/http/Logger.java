@@ -10,7 +10,7 @@ public class Logger {
 	}
 
 	public static void log(Object log) {
-		System.out.println(LocalDateTime.now() + " - " + log);
+		System.out.println(LocalDateTime.now() + " - " + log + System.lineSeparator());
 	}
 
 	public static void log(String log, Throwable t) {
