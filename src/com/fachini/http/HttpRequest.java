@@ -89,7 +89,6 @@ public class HttpRequest {
 
 	public void addHeader(String key, String value) {
 		headers.put(key, value);
-		headers.put("Content-Type", "plain/text");
 	}
 
 	public String getHeader(String header) {
