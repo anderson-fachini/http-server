@@ -1,13 +1,14 @@
 package com.fachini.http;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HttpRequest {
@@ -21,13 +22,28 @@ public class HttpRequest {
 
 	public HttpRequest(InputStream inputStream) {
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
-			String line;
 			boolean readMethod = false;
 			boolean readAllHeaders = false;
-			StringBuilder sb = new StringBuilder();
 
-			while (!(line = br.readLine()).isBlank()) {
+			StringBuilder sb = new StringBuilder();
+			List<String> lines = new ArrayList<>();
+			int byteRead = -2;
+			char charRead = 0;
+			boolean keepReading = true;
+
+			while (keepReading && (byteRead = inputStream.read()) != -1) {
+				charRead = (char) byteRead;
+				sb.append(charRead);
+				keepReading = inputStream.available() > 0;
+			}
+
+			String content = sb.toString();
+			content = content.replaceAll("\r\n", "\n").replaceAll("\r", "\n");
+			String[] contentSlitted = content.split("\n");
+
+			lines.addAll(Arrays.asList(contentSlitted));
+
+			for (String line : lines) {
 				if (!readMethod) {
 					String[] lineSplitted = line.split(" ");
 
@@ -50,7 +66,7 @@ public class HttpRequest {
 					String value = line.substring(colonIdx + 2);
 					addHeader(key, value);
 				} else {
-					sb.append(line).append(System.lineSeparator());
+					body = line;
 				}
 			}
 		} catch (IOException e) {
