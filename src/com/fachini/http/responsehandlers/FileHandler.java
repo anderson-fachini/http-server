@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.fachini.http.HttpMethod;
@@ -14,6 +19,8 @@ import com.fachini.http.Logger;
 import com.fachini.http.Server;
 
 public class FileHandler extends HttpResponse {
+
+	private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("EEE, d MMM yyyy kk:mm:ss 'GMT'");
 
 	public FileHandler(HttpRequest request) {
 		super(request);
@@ -31,10 +38,18 @@ public class FileHandler extends HttpResponse {
 			byte[] content = new byte[0];
 			try {
 				content = Files.readAllBytes(filePath);
-				addHeader("content-type", guessContentType(filePath));
-				addHeader("content-length", Integer.toString(content.length));
+				addHeader("Content-Type", guessContentType(filePath));
+				addHeader("Content-Length", Integer.toString(content.length));
 
-				if (List.of(HttpMethod.GET, HttpMethod.POST).contains(getRequest().getHttpMethod())) {
+				LocalDateTime lastModifiedDate = getLastModified(filePath);
+				if (lastModifiedDate != null) {
+					addHeader("Last-Modified", DTF.format(lastModifiedDate));
+				}
+
+				boolean ifModifiedHeaderSet = setIfModifiedHeader(lastModifiedDate);
+
+				if (!ifModifiedHeaderSet
+						&& List.of(HttpMethod.GET, HttpMethod.POST).contains(getRequest().getHttpMethod())) {
 					setContent(content);
 				}
 			} catch (IOException e) {
@@ -43,7 +58,38 @@ public class FileHandler extends HttpResponse {
 				setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 				setContent("Internal server error");
 			}
+		}
+	}
 
+	private boolean setIfModifiedHeader(LocalDateTime lastModifiedDate) {
+		String modifyCheckHeader = getRequest().getHeader("If-Modified-Since");
+		if (modifyCheckHeader == null) {
+			modifyCheckHeader = getRequest().getHeader("If-Unmodified-Since");
+		}
+
+		if (modifyCheckHeader != null && !modifyCheckHeader.isBlank()) {
+			LocalDateTime modifyCheckDateTime = LocalDateTime.parse(modifyCheckHeader, DTF);
+			if (lastModifiedDate != null && (lastModifiedDate.isBefore(modifyCheckDateTime)
+					|| lastModifiedDate.isEqual(modifyCheckDateTime))) {
+				setHttpStatus(HttpStatus.NOT_MODIFIED);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private LocalDateTime getLastModified(Path path) {
+		try {
+			BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+			FileTime lastModifiedTime = attr.lastModifiedTime();
+
+			LocalDateTime lastModified = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneOffset.UTC);
+			lastModified = lastModified.minusNanos(lastModified.getNano());
+			return lastModified;
+		} catch (IOException e) {
+			Logger.log("Error checking modified date of file " + path, e);
+			return null;
 		}
 	}
 

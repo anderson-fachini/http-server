@@ -92,6 +92,10 @@ public class HttpRequest {
 		headers.put("content-type", "plain/text");
 	}
 
+	public String getHeader(String header) {
+		return headers.get(header);
+	}
+
 	public Map<String, String> getHeaders() {
 		return headers;
 	}
