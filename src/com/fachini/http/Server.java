@@ -6,11 +6,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import com.fachini.http.responsehandlers.HttpResponseFactory;
+import com.fachini.http.responsehandlers.SayHelloHandler;
 
 public class Server {
 
 	public static void main(String[] args) {
 		Logger.log("Starting the server on port " + ConfigurationManager.PORT);
+
+		HttpResponseFactory.registerHandlerForPath("/say-hello", new SayHelloHandler());
 
 		try (ServerSocket serverSocket = new ServerSocket(ConfigurationManager.PORT)) {
 			while (true) {
@@ -30,7 +33,7 @@ public class Server {
 		Logger.log(httpRequest);
 
 		HttpResponse response = HttpResponseFactory.getResponseFor(httpRequest);
-		response.handle();
+		response.handle(httpRequest);
 
 		OutputStream clientOutput = client.getOutputStream();
 		clientOutput.write(response.getData());

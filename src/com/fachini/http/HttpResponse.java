@@ -9,18 +9,9 @@ import com.fachini.http.utils.DateTimeUtils;
 
 public abstract class HttpResponse {
 
-	private HttpRequest request;
-
 	private Map<String, String> headers = new HashMap<>();
 
 	private HttpStatus httpStatus = HttpStatus.OK;
-
-	public HttpResponse(HttpRequest request) {
-		this.request = request;
-		headers.put("Server", "Fachini HTTP Server");
-		headers.put("Date", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(LocalDateTime.now(ZoneOffset.UTC)));
-		headers.put("Connection", "close");
-	}
 
 	private byte[] content = null;
 
@@ -44,10 +35,6 @@ public abstract class HttpResponse {
 		this.content = content;
 	}
 
-	public HttpRequest getRequest() {
-		return request;
-	}
-
 	public HttpStatus getHttpStatus() {
 		return httpStatus;
 	}
@@ -56,9 +43,13 @@ public abstract class HttpResponse {
 		this.httpStatus = httpStatus;
 	}
 
-	public abstract void handle();
+	public abstract void handle(HttpRequest request);
 
 	public byte[] getData() {
+		headers.put("Server", "Fachini HTTP Server");
+		headers.put("Date", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(LocalDateTime.now(ZoneOffset.UTC)));
+		headers.put("Connection", "close");
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("HTTP/1.1 ").append(httpStatus.getCode()).append(System.lineSeparator());
 

@@ -25,9 +25,9 @@ public class HttpResponseFactory {
 		}
 
 		if (request.getHttpMethod() == HttpMethod.OPTIONS) {
-			return new HttpOptionsHandler(request);
+			return new HttpOptionsHandler();
 		}
 
-		return new FileHandler(request);
+		return new FileHandler();
 	}
 }

@@ -5,12 +5,8 @@ import com.fachini.http.HttpResponse;
 
 public class HttpOptionsHandler extends HttpResponse {
 
-	public HttpOptionsHandler(HttpRequest request) {
-		super(request);
-	}
-
 	@Override
-	public void handle() {
+	public void handle(HttpRequest request) {
 		addHeader("Allow", "OPTIONS, GET, HEAD, POST");
 	}
 

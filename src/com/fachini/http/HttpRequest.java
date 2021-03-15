@@ -139,6 +139,10 @@ public class HttpRequest {
 		return queryStringParamters;
 	}
 
+	public String getQueryStringParameter(String name) {
+		return queryStringParamters.get(name);
+	}
+
 	private void checkQueryStringParameters(String path) {
 		try {
 			path = URLDecoder.decode(path, StandardCharsets.UTF_8.name());

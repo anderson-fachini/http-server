@@ -20,13 +20,9 @@ import com.fachini.http.utils.DateTimeUtils;
 
 public class FileHandler extends HttpResponse {
 
-	public FileHandler(HttpRequest request) {
-		super(request);
-	}
-
 	@Override
-	public void handle() {
-		String path = getRequest().getPath();
+	public void handle(HttpRequest request) {
+		String path = request.getPath();
 		Path filePath = getFilePath(path);
 
 		if (!Files.exists(filePath)) {
@@ -44,10 +40,10 @@ public class FileHandler extends HttpResponse {
 					addHeader("Last-Modified", DateTimeUtils.HTTP_DATE_TIME_FORMATTER.format(lastModifiedDate));
 				}
 
-				boolean ifModifiedHeaderSet = setIfModifiedHeader(lastModifiedDate);
+				boolean ifModifiedHeaderSet = setIfModifiedHeader(request, lastModifiedDate);
 
 				if (!ifModifiedHeaderSet
-						&& List.of(HttpMethod.GET, HttpMethod.POST).contains(getRequest().getHttpMethod())) {
+						&& List.of(HttpMethod.GET, HttpMethod.POST).contains(request.getHttpMethod())) {
 					setContent(content);
 				}
 			} catch (IOException e) {
@@ -59,10 +55,10 @@ public class FileHandler extends HttpResponse {
 		}
 	}
 
-	private boolean setIfModifiedHeader(LocalDateTime lastModifiedDate) {
-		String modifyCheckHeader = getRequest().getHeader("If-Modified-Since");
+	private boolean setIfModifiedHeader(HttpRequest request, LocalDateTime lastModifiedDate) {
+		String modifyCheckHeader = request.getHeader("If-Modified-Since");
 		if (modifyCheckHeader == null) {
-			modifyCheckHeader = getRequest().getHeader("If-Unmodified-Since");
+			modifyCheckHeader = request.getHeader("If-Unmodified-Since");
 		}
 
 		if (modifyCheckHeader != null && !modifyCheckHeader.isBlank()) {
