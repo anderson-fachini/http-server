@@ -10,12 +10,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import com.fachini.http.ConfigurationManager;
 import com.fachini.http.HttpMethod;
 import com.fachini.http.HttpRequest;
 import com.fachini.http.HttpResponse;
 import com.fachini.http.HttpStatus;
 import com.fachini.http.Logger;
-import com.fachini.http.Server;
 import com.fachini.http.utils.DateTimeUtils;
 
 public class FileHandler extends HttpResponse {
@@ -103,7 +103,7 @@ public class FileHandler extends HttpResponse {
 			path = "/index.html";
 		}
 
-		return Paths.get(Server.SITE_PATH, path);
+		return Paths.get(ConfigurationManager.SITE_PATH, path);
 	}
 
 }
